@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=360, height=640, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Abre el Tesoro - Edición Final</title>
+
+<style>
+    body { margin: 0; background: black; font-family: 'Courier New', Courier, monospace; overflow: hidden; text-transform: uppercase; touch-action: manipulation; }
+    #game { width: 360px; height: 640px; position: relative; margin: auto; overflow: hidden; background: url('A_pixel_art_digital_illustration_of_a_magical_fore.png') no-repeat center; background-size: cover; image-rendering: pixelated; }
+    
+    /* UI Personajes */
+    #player { position: absolute; width: 140px; height: 160px; z-index: 5; background: url('A_pixel_art_digital_illustration_in_the_16-bit_sty.png') no-repeat center; background-size: contain; bottom: 45px; }
+    #cat { position: absolute; width: 85px; height: 85px; z-index: 4; background: url('A_pixel_art_digital_illustration_of_an_adorable_bl.png') no-repeat center; background-size: contain; bottom: 45px; }
+    #valentina { position: absolute; width: 140px; height: 160px; z-index: 5; background: url('valentina_sprite.png') no-repeat center; background-size: contain; bottom: 45px; display: none; }
+    #treasure { position: absolute; width: 100px; height: 100px; background: url('chest.png') no-repeat center; background-size: contain; left: 130px; bottom: 50px; display: none; z-index: 6; }
+    #envelope { position: absolute; font-size: 50px; display: none; z-index: 10; animation: bounce 1s infinite; width: 50px; height: 50px; text-align: center; }
+    
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+    /* HUD */
+    #hud { position: absolute; top: 10px; width: 100%; display: flex; justify-content: space-between; padding: 0 15px; box-sizing: border-box; z-index: 20; color: white; text-shadow: 2px 2px black; }
+
+    /* Estilo Botones Pixel Dorado */
+    .pixelButton { 
+        background: #FFD700; 
+        border: 4px solid #000; 
+        padding: 15px 30px; 
+        font-size: 22px; 
+        color: #000; 
+        font-weight: bold; 
+        cursor: pointer; 
+        box-shadow: 6px 6px 0px #000;
+        font-family: 'Courier New', Courier, monospace;
+        text-transform: uppercase;
+    }
+    .pixelButton:active { transform: translate(2px, 2px); box-shadow: 4px 4px 0px #000; }
+
+    /* Diálogos y Menús */
+    .dialogBox { position: absolute; width: 85%; left: 50%; top: 45%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.95); color: white; padding: 20px; border: 4px solid #FFD700; z-index: 2000; border-radius: 10px; box-sizing: border-box; }
+    .optionBtn { display: block; width: 100%; margin-top: 10px; padding: 12px; background: #222; color: white; border: 1px solid white; text-align: left; font-family: inherit; font-size: 13px; }
+
+    #memoryGame { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: rgba(0,0,0,0.95); padding: 15px; border: 4px solid #FFD700; z-index: 1000; display: none; }
+    .memory-card { width: 60px; height: 60px; background: #444; border: 2px solid white; display: flex; justify-content: center; align-items: center; font-size: 25px; color: transparent; cursor: pointer; }
+    .memory-card.flipped { color: white; background: #666; }
+
+    #finalLetter { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-height: 75%; background: #fdf5e6; color: #332211; padding: 20px; border: 6px solid #8b4513; z-index: 3000; display: none; overflow-y: auto; font-size: 12px; text-transform: none; line-height: 1.4; }
+    
+    #controls { position: absolute; bottom: 15px; width: 100%; display: flex; justify-content: space-around; z-index: 10; }
+    .controlBtn { width: 60px; height: 60px; background: rgba(34,34,34,0.8); color: white; border: 3px solid white; font-size: 24px; border-radius: 10px; display: flex; justify-content: center; align-items: center; }
+
+    /* Game Over Screen */
+    #gameOverScreen {
+        position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.9);
+        display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 5000;
+    }
+    .gameOverTitle {
+        font-size: 60px; color: #FFF; text-align: center; font-weight: 900; 
+        -webkit-text-stroke: 2px black; margin-bottom: 30px;
+    }
+</style>
+</head>
+<body>
+
+<div id="game">
+    <div id="startScreen" style="position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100;">
+        <div style="font-size: 60px; color: #FFD700; text-align: center; font-weight: 900; -webkit-text-stroke: 2px black; margin-bottom: 20px;">ABRE EL<br>TESORO</div>
+        <button class="pixelButton" onclick="startGame()">INICIAR</button>
+    </div>
+
+    <div id="hud">
+        <div id="lives">❤️❤️❤️</div>
+        <div id="timer" style="display:none; color: #FFD700;">TIEMPO: 60</div>
+    </div>
+
+    <div id="player" style="bottom: 45px; left: 50px;"></div>
+    <div id="cat" style="bottom: 45px; left: 0px;"></div>
+    <div id="valentina"></div>
+    <div id="treasure"></div>
+    <div id="envelope">✉️</div>
+
+    <div id="controls">
+        <button class="controlBtn" id="leftBtn">◀</button>
+        <button class="controlBtn" id="jumpBtn">▲</button>
+        <button class="controlBtn" id="rightBtn">▶</button>
+    </div>
+
+    <div id="gameOverScreen">
+        <div class="gameOverTitle">GAME OVER</div>
+        <button class="pixelButton" style="background:#FFF" onclick="location.reload()">REINTENTAR</button>
+    </div>
+
+    <div id="memoryGame"></div>
+    <div id="finalLetter"></div>
+</div>
+
+<script>
+let audioCtx, gameActive = false, position = 50, velocityY = 0, gravity = 0.6, jumping = false;
+let movingLeft = false, movingRight = false, currentQuestion = 0, envelopeActive = false;
+let globalLives = 3, nextEnvelopeDistance = 120, finalAttempts = 3, timeLeft = 60;
+let bgMusicInterval, isMusicPlaying = false;
+
+function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+
+function playSound(freq, type="square", dur=0.1, vol=0.05) {
+    if(!audioCtx) return;
+    let o = audioCtx.createOscillator(); let g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq; g.gain.value = vol;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + dur);
+}
+
+function startMusic() {
+    if(isMusicPlaying) return;
+    isMusicPlaying = true;
+    let notes = [261, 329, 392, 349]; let i = 0;
+    bgMusicInterval = setInterval(() => {
+        if(isMusicPlaying) playSound(notes[i%4], "triangle", 0.4, 0.02);
+        i++;
+    }, 500);
+}
+
+function stopMusic() { isMusicPlaying = false; clearInterval(bgMusicInterval); bgMusicInterval = null; }
+
+function startGame() {
+    initAudio(); document.getElementById("startScreen").style.display="none";
+    gameActive = true; startMusic(); update();
+}
+
+function update() {
+    if(!gameActive) return;
+    if(movingLeft && position > -10) position -= 5;
+    if(movingRight && position < 220) position += 5;
+    document.getElementById("player").style.left = position + "px";
+    document.getElementById("cat").style.left = (position - 50) + "px";
+    if(jumping){
+        velocityY += gravity;
+        let pBot = parseFloat(document.getElementById("player").style.bottom);
+        pBot -= velocityY;
+        if(pBot <= 45){ pBot = 45; jumping = false; velocityY = 0; }
+        document.getElementById("player").style.bottom = pBot + "px";
+        document.getElementById("cat").style.bottom = pBot + "px";
+    }
+    checkEnvelope();
+    requestAnimationFrame(update);
+}
+
+const leftB = document.getElementById("leftBtn"), rightB = document.getElementById("rightBtn");
+leftB.onmousedown = leftB.ontouchstart = (e) => { e.preventDefault(); movingLeft = true; };
+leftB.onmouseup = leftB.ontouchend = () => movingLeft = false;
+rightB.onmousedown = rightB.ontouchstart = (e) => { e.preventDefault(); movingRight = true; };
+rightB.onmouseup = rightB.ontouchend = () => movingRight = false;
+document.getElementById("jumpBtn").onclick = () => { if(!jumping && gameActive){ velocityY=-15; jumping=true; playSound(400); }};
+
+function checkEnvelope() {
+    let env = document.getElementById("envelope");
+    if(!envelopeActive && currentQuestion < 6){
+        env.style.left = nextEnvelopeDistance + "px"; env.style.bottom = "210px";
+        env.style.display = "block"; envelopeActive = true;
+    }
+    if(envelopeActive){
+        let pBot = parseFloat(document.getElementById("player").style.bottom);
+        // Colisión: el jugador debe estar cerca horizontalmente Y lo suficientemente alto
+        if(Math.abs(position - nextEnvelopeDistance) < 50 && pBot > 130) triggerQuestion();
+    }
+}
+
+const levelMessages = ["En serio amor?, eres un poco creído", "Es más que claro, siempre te lo digo", "Puede que lo haya pensado un poco pero, no es la correcta", "No sabía si me ibas a agradar", "No amor, nos gusta pero no fue", "Fue nuestro primer beso ese día pero, no por la película", "Obviamente, fue la magia de Harry Potter", "Imposible que la elijas, casi vomitas", "Caíste, me gusta pero no es", "Buuu, que malo", "Es el tuyo", "Era una pregunta fácil para descansar", "Cuando me llevaste a casa me dijiste te amo y que ya era un te amo diferente", "Mirada juzgadora", "Solo la coloqué para despistar", "Jmmmm, se nota que te gusta que te gane", "Si lloré, pero también hablé", "No sabía que decir y quería relajar el ambiente.", "Lo pensé, pero no lo dije", "Puede que lo haya dicho, pero me da más risa la otra opción", "Nop, lindos pero no", "Me parecen hermosas pero tengo talasofobia", "Casi, pero no caso", "Siempre lo he dicho, soy leo y tengo la melena"];
+
+const questions = [
+    { text: "1. ¿Qué fue lo primero que pensé sobre ti?", options: [{ text:"a. Es lindo", correct:false, message:levelMessages[0] }, { text:"b. Es un poco raro", correct:true, message:levelMessages[1] }, { text:"c. ¿Por qué me está hablando?", correct:false, message:levelMessages[2] }, { text:"d. Me agrada", correct:false, message:levelMessages[3] }] },
+    { text: "2. ¿Qué película hizo que cambiara todo?", options: [{ text:"a. Como entrenar a tu dragón", correct:false, message:levelMessages[4] }, { text:"b. Nosferatu", correct:false, message:levelMessages[5] }, { text:"c. Harry Potter", correct:true, message:levelMessages[6] }, { text:"d. Terrifier 3", correct:false, message:levelMessages[7] }] },
+    { text: "3. ¿Cuál es mi color favorito?", options: [{ text:"a. Negro", correct:false, message:levelMessages[8] }, { text:"b. Café", correct:false, message:levelMessages[9] }, { text:"c. Rojo", correct:false, message:levelMessages[10] }, { text:"d. Azul", correct:true, message:levelMessages[11] }] },
+    { text: "4. ¿Cuándo me dijiste te amo pero ya era como algo más?", options: [{ text:"a. Después de verme jugar con Valery", correct:true, message:levelMessages[12] }, { text:"b. No sé", correct:false, message:levelMessages[13] }, { text:"c. Viendo The Last of Us", correct:false, message:levelMessages[14] }, { text:"d. Un día en Muka", correct:false, message:levelMessages[15] }] },
+    { text: "5. ¿Qué te dije cuando me besaste por primera vez?", options: [{ text:"a. Nada, solo lloré", correct:false, message:levelMessages[16] }, { text:"b. Te pregunté si besaba rico", correct:true, message:levelMessages[17] }, { text:"c. Esto es raro", correct:false, message:levelMessages[18] }, { text:"d. ¿Por qué?", correct:false, message:levelMessages[19] }] },
+    { text: "6. ¿Si pudiera ser un animal cuál sería?", options: [{ text:"a. Lobo", correct:false, message:levelMessages[20] }, { text:"b. Ballena", correct:false, message:levelMessages[21] }, { text:"c. Tigre", correct:false, message:levelMessages[22] }, { text:"d. León", correct:true, message:levelMessages[23] }] }
+];
+
+function triggerQuestion() {
+    gameActive = false; document.getElementById("envelope").style.display="none"; envelopeActive = false;
+    let q = questions[currentQuestion];
+    let qBox = document.createElement("div"); qBox.className = "dialogBox";
+    qBox.innerHTML = `<div style="color:#FFD700; margin-bottom:10px;">${q.text}</div>`;
+    q.options.forEach(opt => {
+        let b = document.createElement("button"); b.className="optionBtn"; b.innerText=opt.text;
+        b.onclick = () => {
+            qBox.style.display = "none";
+            let mBox = document.createElement("div"); mBox.className="dialogBox";
+            mBox.innerHTML = `<div>"${opt.message}"</div><button class="pixelButton" style="width:100%; margin-top:15px; font-size:16px;">CONTINUAR</button>`;
+            mBox.querySelector("button").onclick = () => {
+                mBox.remove();
+                if(opt.correct){
+                    qBox.remove(); currentQuestion++;
+                    if(currentQuestion >= 6) {
+                        showTransition("Vamos a tranquilizarnos un poco, espero que te relajes", startMemory);
+                    } else {
+                        // Cambiamos la posición del sobre para que el jugador deba moverse al siguiente
+                        nextEnvelopeDistance = Math.floor(Math.random() * 180) + 20; 
+                        // Reseteamos al jugador un poco atrás para obligar al movimiento
+                        position = (nextEnvelopeDistance > 110) ? 10 : 200;
+                        gameActive = true; 
+                        update();
+                    }
+                } else {
+                    globalLives--; document.getElementById("lives").innerText = "❤️".repeat(globalLives);
+                    if(globalLives<=0) showGameOver(); else qBox.style.display="block";
+                }
+            };
+            document.getElementById("game").appendChild(mBox);
+        };
+        qBox.appendChild(b);
+    });
+    document.getElementById("game").appendChild(qBox);
+}
+
+function showGameOver() {
+    gameActive = false;
+    isMusicPlaying = false;
+    document.getElementById("gameOverScreen").style.display = "flex";
+}
+
+function showTransition(msg, nextFunc) {
+    let tBox = document.createElement("div"); tBox.className="dialogBox";
+    tBox.innerHTML = `<div>${msg}</div><button class="pixelButton" style="width:100%; margin-top:15px; font-size:16px;">ACEPTAR</button>`;
+    tBox.querySelector("button").onclick = () => { tBox.remove(); nextFunc(); };
+    document.getElementById("game").appendChild(tBox);
+}
+
+function startMemory() {
+    document.getElementById("timer").style.display="block"; 
+    document.getElementById("memoryGame").style.display="grid";
+    let mTimer = setInterval(() => {
+        if(!isMusicPlaying && document.getElementById("gameOverScreen").style.display !== "flex") startMusic();
+        timeLeft--; document.getElementById("timer").innerText = "TIEMPO: "+timeLeft;
+        if(timeLeft<=0){ clearInterval(mTimer); showGameOver(); }
+    }, 1000);
+    const icons = ['🌸','🐱','⭐','💎','🎨','🍕','🍦','🌙'];
+    let deck = [...icons, ...icons].sort(()=>Math.random()-0.5);
+    deck.forEach(icon => {
+        let c = document.createElement("div"); c.className="memory-card"; c.innerHTML=icon;
+        c.onclick = function() {
+            if(this.classList.contains('flipped') || document.querySelectorAll('.flipped:not(.matched)').length >= 2) return;
+            this.classList.add('flipped');
+            let f = document.querySelectorAll('.flipped:not(.matched)');
+            if(f.length === 2){
+                if(f[0].innerHTML === f[1].innerHTML){ 
+                    f.forEach(x=>x.classList.add('matched')); 
+                    if(document.querySelectorAll('.matched').length===16){ 
+                        clearInterval(mTimer); 
+                        showTransition("Ahora estamos cerca de llegar al final, espero que no te hayas equivocado mucho. Para poder tener tu regalo debes descifrar la clave.", showPassBox); 
+                    } 
+                } else { setTimeout(()=>f.forEach(x=>x.classList.remove('flipped')), 800); }
+            }
+        };
+        document.getElementById("memoryGame").appendChild(c);
+    });
+}
+
+function showPassBox() {
+    document.getElementById("memoryGame").style.display="none"; document.getElementById("timer").style.display="none";
+    let pb = document.createElement("div"); pb.className="dialogBox";
+    pb.innerHTML = `
+        <div id="clue">La pista para la clave es el día de nuestro primer beso, piénsalo bien porque hay letras jajajaja</div>
+        <input type="text" id="passIn" style="width:100%; margin:10px 0; padding:10px; background:black; color:white; border:2px solid #FFD700; text-align:center; font-family:inherit;">
+        <button class="pixelButton" style="width:100%; font-size:16px;" onclick="checkPass()">DESCIFRAR</button>
+    `;
+    document.getElementById("game").appendChild(pb);
+}
+
+function checkPass() {
+    let v = document.getElementById("passIn").value.toUpperCase().trim();
+    if(v === "08012025NOSFERATU" || v === "NOSFERATU08012025"){ document.querySelector(".dialogBox").remove(); openChest(); }
+    else {
+        finalAttempts--; if(finalAttempts<=0) showGameOver();
+        else document.getElementById("clue").innerText = "Vas bien con la fecha pero te falta algo más, puede que al final casi vomitaras";
+    }
+}
+
+function openChest() {
+    stopMusic();
+    document.getElementById("treasure").style.display="block";
+    setTimeout(typeLetter, 1000);
+}
+
+function typeLetter() {
+    let letter = document.getElementById("finalLetter"); letter.style.display="block";
+    const t = `Hola amor mío, me complace decirte que lo lograste.\n\nFeliz San Valentín, gracias por hacerme la mujer más feliz del mundo, por entender mis silencios y escucharme cuando hablo de todo. Gracias por querer luchar a mi lado contra mis miedos e inseguridades, por no presionarme nunca y entender mis tiempos aunque pueda costar.\n\nNuestra historia comenzó hace aproximadamente 1362 días. Sí, desde el 2022 nuestra historia comenzó, solo que no sabíamos que años después esos dos desconocidos empezarían su historia de amor. Hace aproximadamente 401 días todo cambió; llegó un beso que nos movió todo lo que creíamos, que nos llenó de incertidumbre y de miedos, pero que al final hizo que nos preguntáramos qué queríamos.\n\nHace 393 días tuvimos esa conversación donde nos arriesgamos y nos elegimos, tú en medio de un ataque de ansiedad y yo en medio de lágrimas. Ese día, con las estrellas de testigo, enfrentamos el miedo de perder algo tan seguro como nuestra amistad para descubrir si había algo mejor esperando… y ahora sabemos que sí lo había.\n\nEs increíble cómo el tiempo pasa, cómo hemos evolucionado juntos. Gracias por tu paciencia y por tu amor. Sabes que eres una parte vital de mi existencia y que le pido al universo que me permita seguir contando más días a tu lado, hasta que nos convirtamos en estrellas o hasta que nos encontremos en otra vida.\n\nTe amo con el alma,\n\nValentina M.`;
+    let i = 0; function typing() {
+        if(i < t.length){
+            playSound(300, "sine", 0.05, 0.01);
+            letter.innerHTML += t.charAt(i) === "\n" ? "<br>" : t.charAt(i);
+            i++; letter.scrollTop = letter.scrollHeight;
+            setTimeout(typing, 45);
+        } else {
+            let b = document.createElement("button"); b.className="pixelButton"; b.innerText="FINALIZAR"; b.style="width:100%; margin-top:20px; font-size:16px;";
+            b.onclick = finalScene; letter.appendChild(b);
+        }
+    } typing();
+}
+
+function finalScene() {
+    // Limpieza de pantalla
+    document.getElementById("finalLetter").style.display="none";
+    document.getElementById("treasure").style.display="none";
+    document.getElementById("controls").style.display="none"; 
+
+    // 1. PERSONAJES: Se mantienen en la base para que se vean bien
+    const player = document.getElementById("player");
+    player.style.left = "85px"; 
+    player.style.bottom = "60px"; 
+    player.style.transform = "scale(1.4)";
+    player.style.zIndex = "10";
+
+    const cat = document.getElementById("cat");
+    cat.style.left = "25px"; 
+    cat.style.bottom = "55px"; 
+    cat.style.transform = "scale(1.4)";
+
+    const v = document.getElementById("valentina");
+    v.style.display = "block"; 
+    v.style.left = "185px"; 
+    v.style.bottom = "60px"; 
+    v.style.transform = "scale(1.4)";
+
+    // 2. CORAZÓN: Lo subimos un poco más para que no tape las cabezas
+    let heart = document.createElement("div");
+    heart.style = "position:absolute; top:25%; left:50%; transform:translate(-50%,-50%); font-size:80px; animation: beat 1s infinite; z-index:5;";
+    heart.innerHTML = "❤️";
+    document.getElementById("game").appendChild(heart);
+
+    // 3. BOTÓN: Lo bajamos casi al ras del suelo para que no estorbe la vista
+    let rb = document.createElement("button");
+    rb.className = "pixelButton";
+    // bottom: 20px lo pone justo debajo de los personajes sin taparlos
+    rb.style.cssText = "position:absolute; bottom:20px; left:50%; transform:translateX(-50%); font-size:14px; z-index:5000; cursor:pointer; padding: 10px 20px;";
+    rb.innerText = "VOLVER A JUGAR";
+    rb.onclick = function() { location.reload(); };
+    document.getElementById("game").appendChild(rb);
+}
+</script>
+
+<style>
+@keyframes beat { 0%, 100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-50%,-50%) scale(1.2); } }
+</style>
+</body>
+</html>
